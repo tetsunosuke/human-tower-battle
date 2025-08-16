@@ -26,6 +26,12 @@ class HumanTowerBattle {
         this.dropCooldown = 1000; // 落下間隔制限（ミリ秒）
         this.lastDroppedObject = null; // 最後に落としたオブジェクト
         
+        // プレビューと回転機能
+        this.mouseX = 0;
+        this.mouseY = 0;
+        this.currentRotation = 0; // 現在の回転角度（ラジアン）
+        this.showPreview = false;
+        
         // 動的にキャラクター画像を読み込み
         this.characterShapes = [];
         this.characterImages = [];
@@ -66,6 +72,14 @@ class HumanTowerBattle {
         
         this.createGround();
         this.canvas.addEventListener('click', (e) => this.dropCharacter(e));
+        
+        // マウスイベントリスナーを追加
+        this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+        this.canvas.addEventListener('mouseenter', () => this.showPreview = true);
+        this.canvas.addEventListener('mouseleave', () => this.showPreview = false);
+        
+        // キーボードイベントリスナーを追加（回転用）
+        document.addEventListener('keydown', (e) => this.handleKeyDown(e));
     }
     
     createGround() {
@@ -570,6 +584,24 @@ class HumanTowerBattle {
         }
     }
     
+    handleMouseMove(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        this.mouseX = e.clientX - rect.left;
+        this.mouseY = e.clientY - rect.top;
+    }
+    
+    handleKeyDown(e) {
+        // Rキー またはスペースキーで回転
+        if (e.key === 'r' || e.key === 'R' || e.key === ' ') {
+            e.preventDefault();
+            this.currentRotation += Math.PI / 4; // 45度回転
+            if (this.currentRotation >= Math.PI * 2) {
+                this.currentRotation = 0; // 360度で0に戻す
+            }
+            console.log(`Rotation: ${Math.round(this.currentRotation * 180 / Math.PI)}°`);
+        }
+    }
+    
     dropCharacter(e) {
         if (this.isGameOver) return;
         
@@ -585,9 +617,9 @@ class HumanTowerBattle {
         const y = Math.max(50, e.clientY - rect.top);
         
         // デバッグ出力
-        console.log('Selected character:', this.selectedCharacter);
+        console.log('Selected character:', this.selectedCharacter, 'Rotation:', Math.round(this.currentRotation * 180 / Math.PI) + '°');
         
-        this.createCharacter(x, y - this.cameraOffset, this.selectedCharacter);
+        this.createCharacter(x, y - this.cameraOffset, this.selectedCharacter, this.currentRotation);
         this.lastDropTime = currentTime; // 落下時刻を記録
     }
     
@@ -608,7 +640,7 @@ class HumanTowerBattle {
         this.lastDropTime = currentTime; // 落下時刻を記録
     }
     
-    createCharacter(x, y, characterType) {
+    createCharacter(x, y, characterType, rotation = 0) {
         let actualCharacterType, shape;
         
         console.log('Creating character with type:', characterType);
@@ -703,6 +735,11 @@ class HumanTowerBattle {
         if (characterType === 'camera' && (this.frozenPersonImage || this.extractedPersonImage)) {
             body.personImage = this.frozenPersonImage || this.extractedPersonImage;
             body.isPersonImage = true;
+        }
+        
+        // 回転を適用
+        if (rotation !== 0) {
+            Matter.Body.setAngle(body, rotation);
         }
         
         Matter.World.add(this.world, body);
@@ -922,6 +959,11 @@ class HumanTowerBattle {
             this.drawGameOverScreen();
         }
         
+        // プレビュー表示
+        if (this.showPreview && !this.isGameOver) {
+            this.drawPreview();
+        }
+        
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
         this.ctx.fillRect(0, 0, this.canvas.width, 2);
     }
@@ -1025,6 +1067,97 @@ class HumanTowerBattle {
         this.ctx.lineWidth = 2;
         this.ctx.strokeText('Click "Reset Game" to play again', centerX, centerY + 120);
         this.ctx.fillText('Click "Reset Game" to play again', centerX, centerY + 120);
+        
+        this.ctx.restore();
+    }
+    
+    drawPreview() {
+        this.ctx.save();
+        
+        // マウスカーソルの位置に半透明で描画
+        this.ctx.globalAlpha = 0.6;
+        this.ctx.translate(this.mouseX, this.mouseY + this.cameraOffset);
+        this.ctx.rotate(this.currentRotation);
+        
+        if (this.selectedCharacter === 'camera') {
+            // カメラキャラクターの場合
+            if (this.frozenPersonImage || this.extractedPersonImage) {
+                // 静止画像または抽出画像がある場合
+                const personImage = this.frozenPersonImage || this.extractedPersonImage;
+                
+                if (!this.previewPersonImageElement) {
+                    this.previewPersonImageElement = new Image();
+                }
+                
+                if (this.previewPersonImageElement.src !== personImage) {
+                    this.previewPersonImageElement.src = personImage;
+                }
+                
+                if (this.previewPersonImageElement.complete) {
+                    // 実際の人物画像のサイズを計算
+                    const personWidth = this.extractedPersonWidth || 60;
+                    const personHeight = this.extractedPersonHeight || 60;
+                    const aspectRatio = personWidth / personHeight;
+                    
+                    let width, height;
+                    if (aspectRatio > 1) {
+                        width = 60;
+                        height = 60 / aspectRatio;
+                    } else {
+                        width = 60 * aspectRatio;
+                        height = 60;
+                    }
+                    
+                    this.ctx.drawImage(this.previewPersonImageElement, -width/2, -height/2, width, height);
+                    
+                    // 回転角度を表示
+                    if (this.currentRotation !== 0) {
+                        this.ctx.globalAlpha = 0.8;
+                        this.ctx.fillStyle = 'white';
+                        this.ctx.strokeStyle = 'black';
+                        this.ctx.lineWidth = 1;
+                        this.ctx.font = '12px Arial';
+                        this.ctx.textAlign = 'center';
+                        const degrees = Math.round(this.currentRotation * 180 / Math.PI);
+                        this.ctx.strokeText(`${degrees}°`, 0, height/2 + 15);
+                        this.ctx.fillText(`${degrees}°`, 0, height/2 + 15);
+                    }
+                }
+            } else {
+                // カメラ画像がない場合はフォールバック表示
+                this.ctx.fillStyle = 'rgba(100, 100, 100, 0.6)';
+                this.ctx.fillRect(-30, -30, 60, 60);
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = '24px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('📷', 0, 8);
+            }
+        } else {
+            // 通常のキャラクター画像の場合
+            const shape = this.characterShapes[this.selectedCharacter];
+            const image = this.characterImages[this.selectedCharacter];
+            
+            if (!shape || !image || !image.complete) {
+                this.ctx.restore();
+                return;
+            }
+            
+            // キャラクター画像を描画
+            this.ctx.drawImage(image, -shape.width/2, -shape.height/2, shape.width, shape.height);
+            
+            // 回転角度を表示
+            if (this.currentRotation !== 0) {
+                this.ctx.globalAlpha = 0.8;
+                this.ctx.fillStyle = 'white';
+                this.ctx.strokeStyle = 'black';
+                this.ctx.lineWidth = 1;
+                this.ctx.font = '12px Arial';
+                this.ctx.textAlign = 'center';
+                const degrees = Math.round(this.currentRotation * 180 / Math.PI);
+                this.ctx.strokeText(`${degrees}°`, 0, shape.height/2 + 15);
+                this.ctx.fillText(`${degrees}°`, 0, shape.height/2 + 15);
+            }
+        }
         
         this.ctx.restore();
     }
