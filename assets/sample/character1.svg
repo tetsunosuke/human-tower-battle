@@ -1,0 +1,14 @@
+<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Standing Person -->
+  <circle cx="30" cy="15" r="8" fill="#FFD700" stroke="#333" stroke-width="2"/>
+  <rect x="25" y="22" width="10" height="20" fill="#4169E1" stroke="#333" stroke-width="2"/>
+  <rect x="20" y="28" width="8" height="2" fill="#4169E1" stroke="#333" stroke-width="1"/>
+  <rect x="32" y="28" width="8" height="2" fill="#4169E1" stroke="#333" stroke-width="1"/>
+  <rect x="27" y="42" width="3" height="15" fill="#8B4513" stroke="#333" stroke-width="1"/>
+  <rect x="30" y="42" width="3" height="15" fill="#8B4513" stroke="#333" stroke-width="1"/>
+  <!-- Eyes -->
+  <circle cx="27" cy="13" r="1.5" fill="#000"/>
+  <circle cx="33" cy="13" r="1.5" fill="#000"/>
+  <!-- Mouth -->
+  <path d="M 27 17 Q 30 19 33 17" stroke="#000" stroke-width="1" fill="none"/>
+</svg>
