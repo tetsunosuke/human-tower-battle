@@ -25,34 +25,6 @@ export class UIManager {
         this.cameraButton.classList.add('selected');
     }
 
-    createCharacterButton(shape, index) {
-        const button = document.createElement('div');
-        button.className = 'character-button';
-        button.setAttribute('data-character', index);
-        button.id = `char${index}`;
-
-        if (shape.image) {
-            const img = document.createElement('img');
-            img.src = shape.image;
-            img.alt = shape.name;
-            button.appendChild(img);
-        } else {
-            button.textContent = shape.name;
-        }
-
-        button.addEventListener('click', () => {
-            this.selectCharacter(index, button);
-        });
-
-        return button;
-    }
-
-    selectCharacter(index, button) {
-        document.querySelectorAll('.character-button').forEach(b => b.classList.remove('selected'));
-        button.classList.add('selected');
-        this.game.selectedCharacter = index;
-        console.log(`Selected character ${index}: ${this.game.characterShapes[index].name}`);
-    }
 
     setupCameraButtonEvents() {
         const newCameraButton = this.cameraButton.cloneNode(true);
@@ -254,17 +226,6 @@ export class UIManager {
         }
     }
 
-    drawCharacterPreview(characterType) {
-        const shape = this.game.characterShapes[characterType];
-        const image = this.game.characterImages[characterType];
-
-        if (!shape || !image || !image.complete) {
-            return;
-        }
-
-        this.ctx.drawImage(image, -shape.width / 2, -shape.height / 2, shape.width, shape.height);
-        this.drawRotationAngle(shape.height / 2 + 15);
-    }
 
     drawRotationAngle(yOffset) {
         if (this.game.currentRotation !== 0) {
@@ -376,14 +337,9 @@ export class UIManager {
     }
 
     drawCharacterImage(obj) {
-        if (obj.characterImage && obj.characterImage.complete) {
-            const shape = obj.shape;
-            this.ctx.drawImage(obj.characterImage, -shape.width / 2, -shape.height / 2, shape.width, shape.height);
-        } else {
-            const shape = obj.shape;
-            this.ctx.fillStyle = '#FF6B6B';
-            this.ctx.fillRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
-        }
+        const shape = obj.shape;
+        this.ctx.fillStyle = '#FF6B6B';
+        this.ctx.fillRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
     }
 
     resizeCanvas() {

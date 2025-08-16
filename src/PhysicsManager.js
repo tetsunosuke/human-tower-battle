@@ -28,23 +28,13 @@ export class PhysicsManager {
     }
 
     createCharacter(x, y, characterType, rotation) {
-        let body;
-        const shape = this.game.characterShapes[characterType];
-
-        if (characterType === 'camera') {
-            body = this.createCameraCharacter(x, y, rotation);
-        } else {
-            body = this.createRegularCharacter(x, y, shape, rotation);
-        }
+        // Only camera characters are supported now
+        const body = this.createCameraCharacter(x, y, rotation);
 
         body.characterType = characterType;
-        body.characterImage = this.game.characterImages[characterType];
         body.createdAt = Date.now();
-        if (characterType !== 'camera') {
-            body.shape = shape;
-        }
 
-        if (characterType === 'camera' && (this.game.cameraManager.frozenPersonImage || this.game.cameraManager.extractedPersonImage)) {
+        if (this.game.cameraManager.frozenPersonImage || this.game.cameraManager.extractedPersonImage) {
             body.personImage = this.game.cameraManager.frozenPersonImage || this.game.cameraManager.extractedPersonImage;
             body.isPersonImage = true;
         }
@@ -57,13 +47,6 @@ export class PhysicsManager {
         return body;
     }
 
-    createRegularCharacter(x, y, shape, rotation) {
-        return Matter.Bodies.rectangle(x, y, shape.width, shape.height, {
-            restitution: 0.3,
-            friction: 0.8,
-            density: 0.001,
-        });
-    }
 
     createCameraCharacter(x, y, rotation) {
         const cameraManager = this.game.cameraManager;

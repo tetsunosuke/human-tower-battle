@@ -1,8 +1,7 @@
 import { UIManager } from './UIManager.js';
 import { PhysicsManager } from './PhysicsManager.js';
 import { CameraManager } from './CameraManager.js';
-import { checkImageExists } from './utils.js';
-import { MAX_CHARACTERS, CHARACTER_NAMES, DROP_COOLDOWN, CHARACTER_IMAGE_SETTINGS } from './config.js';
+import { DROP_COOLDOWN } from './config.js';
 
 export class Game {
     constructor() {
@@ -30,10 +29,7 @@ export class Game {
         this.showGameOverScreen = false;
         this.finalStats = null;
         this.lastDropTime = 0;
-        this.lastDroppedObject = null;
 
-        this.mouseX = 0;
-        this.mouseY = 0;
         this.currentRotation = 0;
         this.showPreview = true; // Always show preview now
         
@@ -45,7 +41,7 @@ export class Game {
         this.isObjectConfirmed = false; // True when object is confirmed and ready to drop
 
         this.characterShapes = [];
-        this.characterImages = [];
+        this.characterImages = [];  // Required for camera character placeholder
         
         // Help dialog state
         this.gameStarted = false;
@@ -156,7 +152,6 @@ export class Game {
         const body = this.physicsManager.createCharacter(x, y, this.selectedCharacter, this.currentRotation);
         this.gameObjects.push(body);
         this.objectCount++;
-        this.lastDroppedObject = body;
 
         if (this.gameStartTime === null) {
             this.gameStartTime = Date.now();
