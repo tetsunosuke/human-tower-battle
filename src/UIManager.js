@@ -18,17 +18,11 @@ export class UIManager {
         const existingButtons = this.characterSelect.querySelectorAll('.character-button:not(.camera-button)');
         existingButtons.forEach(button => button.remove());
 
-        characterShapes.forEach((shape, index) => {
-            if (!shape.isCamera) {
-                const button = this.createCharacterButton(shape, index);
-                this.cameraButton.before(button);
-                if (index === 0) {
-                    button.classList.add('selected');
-                }
-            }
-        });
-
+        // Only show camera button, no asset-based characters
         this.setupCameraButtonEvents();
+        
+        // Auto-select camera button
+        this.cameraButton.classList.add('selected');
     }
 
     createCharacterButton(shape, index) {
@@ -99,9 +93,7 @@ export class UIManager {
             if (!this.game.cameraManager.frozenPersonImage) {
                 this.cameraButton.style.display = 'none';
                 this.cameraButton.style.backgroundImage = '';
-                if (this.game.selectedCharacter === 'camera') {
-                    this.selectCharacter(0, document.getElementById('char0'));
-                }
+                // Keep camera selected since it's the only option
             } else {
                 this.updateCameraButtonBackground();
             }
@@ -109,7 +101,11 @@ export class UIManager {
     }
 
     updateCameraButtonBackground() {
-        const imageToShow = this.game.cameraManager.frozenPersonImage || this.game.cameraManager.extractedPersonImage;
+        // Show live camera image until confirmed, then show frozen image
+        const imageToShow = this.game.isObjectConfirmed ? 
+            (this.game.cameraManager.frozenPersonImage || this.game.cameraManager.extractedPersonImage) :
+            this.game.cameraManager.extractedPersonImage;
+            
         if (imageToShow) {
             this.cameraButton.style.backgroundImage = `url(${imageToShow})`;
             this.cameraButton.style.backgroundSize = 'cover';
@@ -157,22 +153,6 @@ export class UIManager {
             this.ctx.fillText(score, x, scoreY);
         });
 
-        this.ctx.restore();
-
-        // Draw help text
-        this.ctx.save();
-        this.ctx.font = '16px Arial';
-        this.ctx.fillStyle = 'white';
-        this.ctx.textAlign = 'left';
-        this.ctx.textBaseline = 'middle';
-        const helpText = "'R'キーかスペースで回転";
-        const helpTextX = 20;
-        const helpTextY = scoreY;
-        
-        this.ctx.strokeStyle = 'black';
-        this.ctx.lineWidth = 3;
-        this.ctx.strokeText(helpText, helpTextX, helpTextY);
-        this.ctx.fillText(helpText, helpTextX, helpTextY);
         this.ctx.restore();
     }
 
@@ -226,15 +206,14 @@ export class UIManager {
 
     drawPreview() {
         this.ctx.save();
-        this.ctx.globalAlpha = 0.6;
-        this.ctx.translate(this.game.mouseX, this.game.mouseY + this.game.cameraOffset);
+        // Different opacity for confirmed vs unconfirmed objects
+        this.ctx.globalAlpha = this.game.isObjectConfirmed ? 0.9 : 0.6;
+        this.ctx.translate(this.game.dropX, this.game.dropY + this.game.cameraOffset);
         this.ctx.rotate(this.game.currentRotation);
 
         const characterType = this.game.selectedCharacter;
         if (characterType === 'camera') {
             this.drawCameraPreview();
-        } else {
-            this.drawCharacterPreview(characterType);
         }
 
         this.ctx.restore();
@@ -307,6 +286,7 @@ export class UIManager {
         this.ctx.translate(0, this.game.cameraOffset);
 
         this.drawGround();
+        this.drawPlayAreaBoundaries();
         this.drawGameObjects();
 
         this.ctx.restore();
@@ -321,6 +301,9 @@ export class UIManager {
             this.drawPreview();
         }
 
+        // Update camera button background in real-time
+        this.updateCameraButtonBackground();
+
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
         this.ctx.fillRect(0, 0, this.canvas.width, 2);
     }
@@ -331,6 +314,32 @@ export class UIManager {
         const groundX = (this.canvas.width - groundWidth) / 2;
         this.ctx.fillStyle = '#8B4513';
         this.ctx.fillRect(groundX, ground.position.y - 25, groundWidth, 50);
+    }
+
+    drawPlayAreaBoundaries() {
+        const groundWidth = this.canvas.width * 0.5;
+        const groundX = (this.canvas.width - groundWidth) / 2;
+        const groundY = this.game.physicsManager.ground.position.y;
+        
+        // Draw left and right boundaries
+        this.ctx.strokeStyle = '#FF0000';
+        this.ctx.lineWidth = 3;
+        this.ctx.setLineDash([10, 10]);
+        
+        // Left boundary
+        this.ctx.beginPath();
+        this.ctx.moveTo(groundX, 0);
+        this.ctx.lineTo(groundX, groundY + 25);
+        this.ctx.stroke();
+        
+        // Right boundary
+        this.ctx.beginPath();
+        this.ctx.moveTo(groundX + groundWidth, 0);
+        this.ctx.lineTo(groundX + groundWidth, groundY + 25);
+        this.ctx.stroke();
+        
+        // Reset line dash
+        this.ctx.setLineDash([]);
     }
 
     drawGameObjects() {

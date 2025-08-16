@@ -11,8 +11,10 @@ export class Game {
         this.cameraManager = new CameraManager(this);
 
         this.initializeGameState();
+        this.initializeDropPosition();
         this.loadAssets();
         this.setupEventListeners();
+        this.setupHelpDialog();
 
         this.gameLoop();
     }
@@ -21,7 +23,7 @@ export class Game {
         this.objectCount = 0;
         this.gameStartTime = null;
         this.maxHeightPixels = 0;
-        this.selectedCharacter = 0;
+        this.selectedCharacter = 'camera';
         this.gameObjects = [];
         this.cameraOffset = 0;
         this.isGameOver = false;
@@ -33,10 +35,25 @@ export class Game {
         this.mouseX = 0;
         this.mouseY = 0;
         this.currentRotation = 0;
-        this.showPreview = false;
+        this.showPreview = true; // Always show preview now
+        
+        // Fixed drop position system
+        this.dropX = 0; // Will be set to center in initializeDropPosition
+        this.dropY = 150; // Fixed Y position for dropping
+        
+        // Two-step drop process
+        this.isObjectConfirmed = false; // True when object is confirmed and ready to drop
 
         this.characterShapes = [];
         this.characterImages = [];
+        
+        // Help dialog state
+        this.gameStarted = false;
+    }
+
+    initializeDropPosition() {
+        // Set drop position to center of canvas
+        this.dropX = this.uiManager.canvas.width / 2;
     }
 
     async loadAssets() {
@@ -45,77 +62,94 @@ export class Game {
     }
 
     async loadCharacterImages() {
-        for (let i = 1; i <= MAX_CHARACTERS; i++) {
-            const imagePath = `assets/character${i}.svg`;
-            if (await checkImageExists(imagePath)) {
-                const shape = {
-                    image: imagePath,
-                    width: CHARACTER_IMAGE_SETTINGS.height, // Initial value
-                    height: CHARACTER_IMAGE_SETTINGS.height, // Initial value
-                    name: CHARACTER_NAMES[i - 1] || `キャラクター ${i}`,
-                    index: i - 1
-                };
-                this.characterShapes.push(shape);
-                await this.loadSingleCharacterImage(shape, this.characterShapes.length - 1);
-            } else if (i > 5) {
-                break; // Stop if we miss a few
-            }
-        }
-
+        // Only create camera character shape - no asset images
         const cameraShape = { 
             image: null, 
             width: 30, 
             height: 60, 
             isCamera: true, 
             name: 'カメラ',
-            index: this.characterShapes.length
+            index: 0
         };
         this.characterShapes.push(cameraShape);
         this.characterImages.push(null);
     }
 
-    loadSingleCharacterImage(shape, index) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.src = shape.image;
-            img.onload = () => {
-                const aspectRatio = img.naturalWidth / img.naturalHeight;
-                shape.width = CHARACTER_IMAGE_SETTINGS.height * aspectRatio;
-                shape.height = CHARACTER_IMAGE_SETTINGS.height;
-                this.characterImages[index] = img;
-                resolve();
-            };
-            img.onerror = () => {
-                this.characterImages[index] = null;
-                resolve();
-            };
+    setupHelpDialog() {
+        // Check if user has seen the help dialog before
+        if (!this.getCookie('hideHelpDialog')) {
+            this.showHelpDialog();
+        } else {
+            this.gameStarted = true;
+        }
+
+        // Setup help dialog event listeners
+        document.getElementById('startGameButton').addEventListener('click', () => {
+            this.hideHelpDialog();
         });
+    }
+
+    getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+
+    setCookie(name, value, days = 365) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+    }
+
+    showHelpDialog() {
+        document.getElementById('helpDialog').style.display = 'block';
+        this.gameStarted = false;
+    }
+
+    hideHelpDialog() {
+        const dontShowAgain = document.getElementById('dontShowAgain').checked;
+        if (dontShowAgain) {
+            this.setCookie('hideHelpDialog', 'true');
+        }
+        document.getElementById('helpDialog').style.display = 'none';
+        this.gameStarted = true;
     }
 
     setupEventListeners() {
         const canvas = this.uiManager.canvas;
         canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
-        canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-        canvas.addEventListener('mouseenter', () => this.showPreview = true);
-        canvas.addEventListener('mouseleave', () => this.showPreview = false);
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
         window.addEventListener('resize', () => this.handleResize());
     }
 
     handleCanvasClick(e) {
-        if (this.isGameOver) return;
+        if (this.isGameOver || !this.gameStarted) return;
+        this.handleDropAction();
+    }
 
-        const currentTime = Date.now();
-        if (currentTime - this.lastDropTime < DROP_COOLDOWN) {
-            return;
+    handleDropAction() {
+        if (!this.isObjectConfirmed) {
+            // First step: Confirm the object
+            this.isObjectConfirmed = true;
+            // Freeze the current camera image
+            if (this.cameraManager.extractedPersonImage) {
+                this.cameraManager.frozenPersonImage = this.cameraManager.extractedPersonImage;
+            }
+            if (this.cameraManager.personVertices) {
+                this.cameraManager.frozenPersonVertices = JSON.parse(JSON.stringify(this.cameraManager.personVertices));
+            }
+        } else {
+            // Second step: Drop the object
+            const currentTime = Date.now();
+            if (currentTime - this.lastDropTime < DROP_COOLDOWN) {
+                return;
+            }
+            
+            this.dropCharacter(this.dropX, this.dropY - this.cameraOffset);
+            this.lastDropTime = currentTime;
+            this.isObjectConfirmed = false; // Reset for next object
         }
-
-        const rect = this.uiManager.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = Math.max(50, e.clientY - rect.top);
-
-        this.dropCharacter(x, y - this.cameraOffset);
-        this.lastDropTime = currentTime;
     }
 
     dropCharacter(x, y) {
@@ -129,22 +163,61 @@ export class Game {
         }
     }
 
-    handleMouseMove(e) {
-        const rect = this.uiManager.canvas.getBoundingClientRect();
-        this.mouseX = e.clientX - rect.left;
-        this.mouseY = e.clientY - rect.top;
-    }
 
     handleKeyDown(e) {
-        if (e.key === 'r' || e.key === 'R' || e.key === ' ') {
+        if (!this.gameStarted) return;
+        
+        if (e.key === 'ArrowUp') {
             e.preventDefault();
             this.currentRotation = (this.currentRotation + Math.PI / 4) % (Math.PI * 2);
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            this.currentRotation = (this.currentRotation - Math.PI / 4 + Math.PI * 2) % (Math.PI * 2);
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const playAreaLeft = (this.uiManager.canvas.width - this.uiManager.canvas.width * 0.5) / 2;
+            this.dropX = Math.max(playAreaLeft + 30, this.dropX - 20);
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            const playAreaRight = (this.uiManager.canvas.width + this.uiManager.canvas.width * 0.5) / 2;
+            this.dropX = Math.min(playAreaRight - 30, this.dropX + 20);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            this.handleDropAction();
+        } else if (e.key === 's' || e.key === 'S') {
+            e.preventDefault();
+            this.takeScreenshot();
         }
+    }
+
+    takeScreenshot(isGameOver = false) {
+        const canvas = this.uiManager.canvas;
+        const link = document.createElement('a');
+        
+        // Generate filename with timestamp
+        const now = new Date();
+        const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        const prefix = isGameOver ? 'gameover' : 'screenshot';
+        const filename = `human-tower-${prefix}-${timestamp}.png`;
+        
+        // Convert canvas to blob and download
+        canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            console.log(`Screenshot saved as: ${filename}`);
+        }, 'image/png');
     }
 
     handleResize() {
         this.uiManager.resizeCanvas();
         this.physicsManager.createGround();
+        this.initializeDropPosition();
     }
 
     checkGameOver() {
@@ -187,6 +260,11 @@ export class Game {
             time: timeString,
             height: this.maxHeightPixels
         };
+
+        // Auto-screenshot after game over screen is rendered
+        setTimeout(() => {
+            this.takeScreenshot(true);
+        }, 1000);
     }
 
     updateCamera() {
