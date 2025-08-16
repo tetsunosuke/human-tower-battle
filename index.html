@@ -3,145 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Human Tower Battle</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
-            font-family: Arial, sans-serif;
-        }
-        
-        #gameContainer {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-        
-        #gameCanvas {
-            display: block;
-            background: transparent;
-        }
-        
-        #ui {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 100;
-            color: white;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        
-        #characterSelect {
-            position: absolute;
-            top: 80px;
-            right: 10px;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-            color: white;
-        }
-        
-        .character-button {
-            display: block;
-            width: 60px;
-            height: 60px;
-            margin: 5px 0;
-            border: 2px solid white;
-            border-radius: 5px;
-            background: #444;
-            cursor: pointer;
-            transition: all 0.3s;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .character-button:hover {
-            background: #666;
-            transform: scale(1.1);
-        }
-        
-        .character-button.selected {
-            border-color: #ffff00;
-            background: #666;
-        }
-        
-        .character-button.camera-button {
-            background-color: #444;
-        }
-        
-        .character-button.camera-button:hover {
-            background-color: #666;
-        }
-        
-        .character-button.camera-button.selected {
-            background-color: #666;
-        }
-        
-        .character-button img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            pointer-events: none;
-        }
-        
-        #cameraContainer {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        
-        #cameraVideo {
-            width: 200px;
-            height: 150px;
-            border-radius: 5px;
-        }
-        
-        #cameraCanvas {
-            display: none;
-        }
-        
-        #detectedObjects {
-            color: white;
-            margin-top: 5px;
-            font-size: 12px;
-        }
-        
-        .detected-person {
-            background: rgba(255, 255, 0, 0.3);
-            border: 1px solid yellow;
-            margin: 2px 0;
-            padding: 2px 5px;
-            cursor: pointer;
-            border-radius: 3px;
-        }
-        
-        .detected-person:hover {
-            background: rgba(255, 255, 0, 0.5);
-        }
-    </style>
+    <title>人間タワーバトル</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         
         <div id="ui">
-            <button id="resetButton">Reset Game</button>
+            <button id="resetButton">ゲームをリセット</button>
         </div>
         
         <div id="characterSelect">
-            <h4>Select Character</h4>
+            <h4>キャラクター選択</h4>
             <div class="character-button camera-button" data-character="camera" id="charCamera" style="display: none;">📷</div>
         </div>
         
@@ -149,7 +23,7 @@
             <video id="cameraVideo" autoplay muted></video>
             <canvas id="cameraCanvas"></canvas>
             <div id="detectedObjects">
-                <div>Detected People:</div>
+                <div>検出された人:</div>
             </div>
         </div>
     </div>
@@ -157,21 +31,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix"></script>
-    <script>
-        // TensorFlow.jsとBodyPixの読み込み完了を待つ
-        window.addEventListener('load', async () => {
-            // ライブラリが読み込まれるまで少し待つ
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // ゲームを初期化
-            if (typeof tf !== 'undefined' && typeof bodyPix !== 'undefined') {
-                new HumanTowerBattle();
-            } else {
-                console.error('Required libraries not loaded');
-                alert('Required libraries failed to load. Please refresh the page.');
-            }
-        });
-    </script>
-    <script src="game.js"></script>
+    <script type="module" src="main.js"></script>
 </body>
 </html>
