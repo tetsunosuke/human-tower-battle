@@ -1,0 +1,16 @@
+<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Running Person -->
+  <circle cx="32" cy="15" r="8" fill="#98FB98" stroke="#333" stroke-width="2"/>
+  <rect x="27" y="22" width="10" height="16" fill="#32CD32" stroke="#333" stroke-width="2" transform="rotate(5 32 30)"/>
+  <!-- Running arms -->
+  <rect x="15" y="24" width="8" height="2" fill="#32CD32" stroke="#333" stroke-width="1" transform="rotate(-20 19 25)"/>
+  <rect x="37" y="28" width="8" height="2" fill="#32CD32" stroke="#333" stroke-width="1" transform="rotate(30 41 29)"/>
+  <!-- Running legs -->
+  <rect x="25" y="38" width="3" height="15" fill="#556B2F" stroke="#333" stroke-width="1" transform="rotate(-20 26.5 45.5)"/>
+  <rect x="32" y="38" width="3" height="12" fill="#556B2F" stroke="#333" stroke-width="1" transform="rotate(15 33.5 44)"/>
+  <!-- Eyes -->
+  <circle cx="29" cy="13" r="1.5" fill="#000"/>
+  <circle cx="35" cy="13" r="1.5" fill="#000"/>
+  <!-- Mouth -->
+  <ellipse cx="32" cy="17" rx="2" ry="1" fill="#000"/>
+</svg>
