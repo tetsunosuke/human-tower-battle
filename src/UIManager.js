@@ -14,6 +14,45 @@ export class UIManager {
         document.getElementById('resetButton').addEventListener('click', () => this.game.resetGame());
     }
 
+    createCameraSelector(availableCameras) {
+        // Create camera selector dropdown if multiple cameras are available
+        const cameraContainer = document.getElementById('cameraContainer');
+        
+        // Remove existing selector if present
+        const existingSelector = document.getElementById('cameraSelector');
+        if (existingSelector) {
+            existingSelector.remove();
+        }
+
+        const selectorDiv = document.createElement('div');
+        selectorDiv.id = 'cameraSelector';
+        selectorDiv.className = 'camera-selector';
+
+        const label = document.createElement('div');
+        label.textContent = '📷 カメラを えらぼう！';
+        label.className = 'camera-selector-label';
+
+        const select = document.createElement('select');
+        select.id = 'cameraSelect';
+        select.className = 'camera-select';
+
+        availableCameras.forEach((camera, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = camera.label || `カメラ ${index + 1}`;
+            select.appendChild(option);
+        });
+
+        select.addEventListener('change', (e) => {
+            const selectedIndex = parseInt(e.target.value);
+            this.game.cameraManager.switchCamera(selectedIndex);
+        });
+
+        selectorDiv.appendChild(label);
+        selectorDiv.appendChild(select);
+        cameraContainer.appendChild(selectorDiv);
+    }
+
     updateCharacterSelectUI(characterShapes) {
         const existingButtons = this.characterSelect.querySelectorAll('.character-button:not(.camera-button)');
         existingButtons.forEach(button => button.remove());

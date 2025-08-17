@@ -17,7 +17,13 @@ export class CameraManager {
         this.extractedPersonWidth = 0;
         this.extractedPersonHeight = 0;
 
+        // Multiple camera support
+        this.availableCameras = [];
+        this.currentCameraIndex = 0;
+        this.currentStream = null;
+
         this.loadBodyPix();
+        this.detectAvailableCameras();
     }
 
     async loadBodyPix() {
@@ -30,6 +36,21 @@ export class CameraManager {
         }
     }
 
+    async detectAvailableCameras() {
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            this.availableCameras = devices.filter(device => device.kind === 'videoinput');
+            console.log(`Found ${this.availableCameras.length} camera(s):`, this.availableCameras);
+            
+            // Update UI with camera selection if multiple cameras available
+            if (this.availableCameras.length > 1) {
+                this.game.uiManager.createCameraSelector(this.availableCameras);
+            }
+        } catch (error) {
+            console.error('Failed to enumerate devices:', error);
+        }
+    }
+
     tryStartCamera() {
         // Automatically start the camera once the model is loaded
         setTimeout(() => {
@@ -39,17 +60,60 @@ export class CameraManager {
 
     async toggleCamera() {
         if (!this.isCameraActive) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { width: CAMERA_CONFIG.width, height: CAMERA_CONFIG.height } 
-                });
-                this.cameraVideo.srcObject = stream;
-                this.isCameraActive = true;
-                this.startPersonDetection();
-            } catch (error) {
-                console.error('Camera access denied:', error);
-                alert('人物検出にはカメラへのアクセスが必要です');
+            await this.startCamera(this.currentCameraIndex);
+        } else {
+            this.stopCamera();
+        }
+    }
+
+    async startCamera(cameraIndex = 0) {
+        try {
+            // Stop current stream if active
+            if (this.currentStream) {
+                this.stopCamera();
             }
+
+            const constraints = { 
+                video: { 
+                    width: CAMERA_CONFIG.width, 
+                    height: CAMERA_CONFIG.height 
+                } 
+            };
+
+            // If specific camera is selected and available
+            if (this.availableCameras.length > cameraIndex) {
+                constraints.video.deviceId = { exact: this.availableCameras[cameraIndex].deviceId };
+            }
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            this.currentStream = stream;
+            this.cameraVideo.srcObject = stream;
+            this.currentCameraIndex = cameraIndex;
+            this.isCameraActive = true;
+            this.startPersonDetection();
+            
+            console.log(`Started camera: ${this.availableCameras[cameraIndex]?.label || 'Default'}`);
+        } catch (error) {
+            console.error('Camera access denied:', error);
+            alert('人物検出にはカメラへのアクセスが必要です');
+        }
+    }
+
+    stopCamera() {
+        if (this.currentStream) {
+            this.currentStream.getTracks().forEach(track => track.stop());
+            this.currentStream = null;
+        }
+        this.cameraVideo.srcObject = null;
+        this.isCameraActive = false;
+        this.detectedPeople = [];
+        this.extractedPersonImage = null;
+    }
+
+    async switchCamera(cameraIndex) {
+        if (cameraIndex !== this.currentCameraIndex && cameraIndex < this.availableCameras.length) {
+            console.log(`Switching to camera ${cameraIndex}: ${this.availableCameras[cameraIndex].label}`);
+            await this.startCamera(cameraIndex);
         }
     }
 

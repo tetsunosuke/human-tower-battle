@@ -187,6 +187,50 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
+/* Camera Selector Styles */
+.camera-selector {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.camera-selector-label {
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-align: center;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.camera-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #4ECDC4;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #FFE4E1 0%, #E0F6FF 100%);
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.camera-select:hover {
+    border-color: #FF6B6B;
+    background: linear-gradient(135deg, #E0F6FF 0%, #FFE4E1 100%);
+    transform: scale(1.02);
+}
+
+.camera-select:focus {
+    outline: none;
+    border-color: #FFD700;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
 .detected-person {
     background: linear-gradient(135deg, #FFE135 0%, #FFA726 100%);
     border: 2px solid #FFF;
