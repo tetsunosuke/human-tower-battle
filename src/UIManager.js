@@ -79,11 +79,29 @@ export class UIManager {
             this.game.cameraManager.extractedPersonImage;
             
         if (imageToShow) {
+            // Update button size based on person aspect ratio
+            const personWidth = this.game.cameraManager.extractedPersonWidth || 80;
+            const personHeight = this.game.cameraManager.extractedPersonHeight || 80;
+            const aspectRatio = personWidth / personHeight;
+            let width, height;
+            if (aspectRatio > 1) {
+                width = 80;
+                height = 80 / aspectRatio;
+            } else {
+                width = 80 * aspectRatio;
+                height = 80;
+            }
+            
+            this.cameraButton.style.width = `${width}px`;
+            this.cameraButton.style.height = `${height}px`;
             this.cameraButton.style.backgroundImage = `url(${imageToShow})`;
             this.cameraButton.style.backgroundSize = 'cover';
             this.cameraButton.style.backgroundPosition = 'center';
             this.cameraButton.textContent = '';
         } else {
+            // Reset to default square size when no person detected
+            this.cameraButton.style.width = '70px';
+            this.cameraButton.style.height = '70px';
             this.cameraButton.style.backgroundImage = '';
             this.cameraButton.textContent = '🧑';
         }
@@ -202,23 +220,23 @@ export class UIManager {
             }
 
             if (this.previewPersonImageElement.complete) {
-                const personWidth = this.game.cameraManager.extractedPersonWidth || 60;
-                const personHeight = this.game.cameraManager.extractedPersonHeight || 60;
+                const personWidth = this.game.cameraManager.extractedPersonWidth || 80;
+                const personHeight = this.game.cameraManager.extractedPersonHeight || 80;
                 const aspectRatio = personWidth / personHeight;
                 let width, height;
                 if (aspectRatio > 1) {
-                    width = 60;
-                    height = 60 / aspectRatio;
+                    width = 80;
+                    height = 80 / aspectRatio;
                 } else {
-                    width = 60 * aspectRatio;
-                    height = 60;
+                    width = 80 * aspectRatio;
+                    height = 80;
                 }
                 this.ctx.drawImage(this.previewPersonImageElement, -width / 2, -height / 2, width, height);
                 this.drawRotationAngle(height / 2 + 15);
             }
         } else {
             this.ctx.fillStyle = 'rgba(100, 100, 100, 0.6)';
-            this.ctx.fillRect(-30, -30, 60, 60);
+            this.ctx.fillRect(-40, -40, 80, 80);
             this.ctx.fillStyle = 'white';
             this.ctx.font = '24px Arial';
             this.ctx.textAlign = 'center';

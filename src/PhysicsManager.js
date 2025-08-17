@@ -53,12 +53,21 @@ export class PhysicsManager {
         let body;
 
         if (cameraManager.frozenPersonImage && cameraManager.extractedPersonWidth && cameraManager.extractedPersonHeight) {
-            const aspectRatio = cameraManager.extractedPersonWidth / cameraManager.extractedPersonHeight;
-            const targetHeight = 60;
-            const targetWidth = targetHeight * aspectRatio;
+            // Use the same size calculation as preview to ensure consistency
+            const personWidth = cameraManager.extractedPersonWidth || 80;
+            const personHeight = cameraManager.extractedPersonHeight || 80;
+            const aspectRatio = personWidth / personHeight;
+            let width, height;
+            if (aspectRatio > 1) {
+                width = 80;
+                height = 80 / aspectRatio;
+            } else {
+                width = 80 * aspectRatio;
+                height = 80;
+            }
             const shape = {
-                width: targetWidth,
-                height: targetHeight,
+                width: width,
+                height: height,
             };
 
             if (cameraManager.frozenPersonVertices && cameraManager.frozenPersonVertices.length >= 3) {
@@ -78,7 +87,7 @@ export class PhysicsManager {
             body.shape = shape; // Attach shape info for rendering
         } else {
             // Fallback for camera character
-            const shape = { width: 60, height: 60 };
+            const shape = { width: 80, height: 80 };
             body = Matter.Bodies.rectangle(x, y, shape.width, shape.height, { restitution: 0.3, friction: 0.8, density: 0.001 });
             body.shape = shape;
         }

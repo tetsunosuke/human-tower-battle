@@ -11,11 +11,11 @@
         <canvas id="gameCanvas"></canvas>
         
         <div id="ui">
-            <button id="resetButton">ゲームをリセット</button>
+            <button id="resetButton">🔄 もう いちど やろう！</button>
         </div>
         
         <div id="characterSelect">
-            <h4>落とす画像</h4>
+            <h4>📸 じぶんを とろう！</h4>
             <div class="character-button camera-button" data-character="camera" id="charCamera" style="display: none;">📷</div>
         </div>
         
@@ -23,7 +23,7 @@
             <video id="cameraVideo" autoplay muted></video>
             <canvas id="cameraCanvas"></canvas>
             <div id="detectedObjects">
-                <div>検出された人:</div>
+                <div>👤 きみを みつけたよ！</div>
             </div>
         </div>
         
@@ -31,13 +31,32 @@
         <div id="helpDialog" style="display: none;">
             <div class="dialog-overlay">
                 <div class="dialog-content">
-                    <h2>ゲームの説明</h2>
-                    <p>ここに説明が入ります</p>
+                    <h2>🏗️ にんげんタワーゲーム 🏗️</h2>
+                    <div class="game-description">
+                        <p>📸 <strong>カメラで じぶんを うつそう！</strong></p>
+                        <p>きみの すがたを カメラで とって、たかい タワーを つくろう！</p>
+                        
+                        <div class="instructions">
+                            <h3>🎮 あそびかた</h3>
+                            <ul>
+                                <li>📷 カメラボタンを おして じぶんを とろう</li>
+                                <li>⬅️➡️ ひだり・みぎの やじるしキーで ばしょを きめよう</li>
+                                <li>⬆️⬇️ うえ・したの やじるしキーで まわそう</li>
+                                <li>⏎ エンターキーを おして おとそう</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="goal">
+                            <h3>🎯 もくひょう</h3>
+                            <p>たくさん つんで、たかい タワーを つくろう！<br>
+                            どれだけ たかく できるかな？</p>
+                        </div>
+                    </div>
                     <div class="dialog-controls">
                         <label>
-                            <input type="checkbox" id="dontShowAgain"> 次回以降表示しない
+                            <input type="checkbox" id="dontShowAgain"> つぎからは みない
                         </label>
-                        <button id="startGameButton">ゲーム開始</button>
+                        <button id="startGameButton">🚀 ゲームを はじめよう！</button>
                     </div>
                 </div>
             </div>
