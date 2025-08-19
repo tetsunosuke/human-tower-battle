@@ -113,39 +113,43 @@ export class Game {
     }
 
     setupEventListeners() {
-        const canvas = this.uiManager.canvas;
-        canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+        document.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
         window.addEventListener('resize', () => this.handleResize());
     }
 
-    handleCanvasClick(e) {
+    handleDoubleClick(e) {
         if (this.isGameOver || !this.gameStarted) return;
-        this.handleDropAction();
+        e.preventDefault();
+        this.confirmObject();
     }
 
-    handleDropAction() {
-        if (!this.isObjectConfirmed) {
-            // First step: Confirm the object
-            this.isObjectConfirmed = true;
-            // Freeze the current camera image
-            if (this.cameraManager.extractedPersonImage) {
-                this.cameraManager.frozenPersonImage = this.cameraManager.extractedPersonImage;
-            }
-            if (this.cameraManager.personVertices) {
-                this.cameraManager.frozenPersonVertices = JSON.parse(JSON.stringify(this.cameraManager.personVertices));
-            }
-        } else {
-            // Second step: Drop the object
-            const currentTime = Date.now();
-            if (currentTime - this.lastDropTime < DROP_COOLDOWN) {
-                return;
-            }
-            
-            this.dropCharacter(this.dropX, this.dropY - this.cameraOffset);
-            this.lastDropTime = currentTime;
-            this.isObjectConfirmed = false; // Reset for next object
+    confirmObject() {
+        if (this.isObjectConfirmed || this.isGameOver || !this.gameStarted) return;
+
+        this.isObjectConfirmed = true;
+        // Freeze the current camera image
+        if (this.cameraManager.extractedPersonImage) {
+            this.cameraManager.frozenPersonImage = this.cameraManager.extractedPersonImage;
+            this.uiManager.freezeCameraButtonImage(); // Freeze button background
         }
+        if (this.cameraManager.personVertices) {
+            this.cameraManager.frozenPersonVertices = JSON.parse(JSON.stringify(this.cameraManager.personVertices));
+        }
+    }
+
+    dropObject() {
+        if (!this.isObjectConfirmed || this.isGameOver || !this.gameStarted) return;
+
+        const currentTime = Date.now();
+        if (currentTime - this.lastDropTime < DROP_COOLDOWN) {
+            return;
+        }
+
+        this.dropCharacter(this.dropX, this.dropY - this.cameraOffset);
+        this.lastDropTime = currentTime;
+        this.isObjectConfirmed = false; // Reset for next object
+        this.cameraManager.frozenPersonImage = null; // Unfreeze for live preview
     }
 
     dropCharacter(x, y) {
@@ -178,7 +182,7 @@ export class Game {
             this.dropX = Math.min(playAreaRight - 30, this.dropX + 20);
         } else if (e.key === 'Enter') {
             e.preventDefault();
-            this.handleDropAction();
+            this.dropObject();
         } else if (e.key === 's' || e.key === 'S') {
             e.preventDefault();
             this.takeScreenshot();
@@ -284,7 +288,9 @@ export class Game {
     resetGame() {
         this.physicsManager.clear();
         this.initializeGameState();
+        this.initializeDropPosition();
         this.uiManager.updateCharacterSelectUI(this.characterShapes);
+        this.uiManager.resetFrozenCameraButtonImage();
     }
 
     gameLoop() {

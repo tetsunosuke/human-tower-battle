@@ -5,6 +5,7 @@ export class UIManager {
         this.ctx = this.canvas.getContext('2d');
         this.characterSelect = document.getElementById('characterSelect');
         this.cameraButton = document.getElementById('charCamera');
+        this.frozenCameraButtonImage = null;
 
         this.resizeCanvas();
         this.setupUIEventListeners();
@@ -70,28 +71,26 @@ export class UIManager {
         this.cameraButton.parentNode.replaceChild(newCameraButton, this.cameraButton);
         this.cameraButton = newCameraButton;
 
-        this.cameraButton.addEventListener('click', () => {
-            document.querySelectorAll('.character-button').forEach(b => b.classList.remove('selected'));
-            this.cameraButton.classList.add('selected');
-            this.game.selectedCharacter = 'camera';
-            console.log('Selected camera character');
+        // The dblclick event on the document now handles the drop action.
+    }
 
-            if (this.game.cameraManager.extractedPersonImage) {
-                this.game.cameraManager.frozenPersonImage = this.game.cameraManager.extractedPersonImage;
-            }
-            if (this.game.cameraManager.personVertices) {
-                this.game.cameraManager.frozenPersonVertices = JSON.parse(JSON.stringify(this.game.cameraManager.personVertices));
-            }
-        });
+    freezeCameraButtonImage() {
+        if (this.game.cameraManager.extractedPersonImage) {
+            this.frozenCameraButtonImage = this.game.cameraManager.extractedPersonImage;
+        }
+    }
+
+    resetFrozenCameraButtonImage() {
+        this.frozenCameraButtonImage = null;
     }
 
     updateDetectedPeopleUI(detectedPeople) {
         const container = document.getElementById('detectedObjects');
         container.innerHTML = '<div>検出された人:</div>';
 
+        this.cameraButton.style.display = 'block';
+
         if (detectedPeople.length > 0) {
-            this.cameraButton.style.display = 'block';
-            this.cameraButton.textContent = '🧑';
             this.updateCameraButtonBackground();
 
             detectedPeople.forEach((person, index) => {
@@ -101,21 +100,13 @@ export class UIManager {
                 container.appendChild(div);
             });
         } else {
-            if (!this.game.cameraManager.frozenPersonImage) {
-                this.cameraButton.style.display = 'none';
-                this.cameraButton.style.backgroundImage = '';
-                // Keep camera selected since it's the only option
-            } else {
-                this.updateCameraButtonBackground();
-            }
+            this.updateCameraButtonBackground();
         }
     }
 
     updateCameraButtonBackground() {
-        // Show live camera image until confirmed, then show frozen image
-        const imageToShow = this.game.isObjectConfirmed ? 
-            (this.game.cameraManager.frozenPersonImage || this.game.cameraManager.extractedPersonImage) :
-            this.game.cameraManager.extractedPersonImage;
+        // Show frozen image if available, otherwise show live camera image
+        const imageToShow = this.frozenCameraButtonImage || this.game.cameraManager.extractedPersonImage;
             
         if (imageToShow) {
             // Update button size based on person aspect ratio
@@ -157,7 +148,7 @@ export class UIManager {
         }
 
         const scores = [
-            `オブジェクト: ${this.game.objectCount}`,
+            `落とした数: ${this.game.objectCount}`,
             `時間: ${timeString}`,
             `高さ: ${this.game.maxHeightPixels}px`
         ];
@@ -209,7 +200,7 @@ export class UIManager {
         this.ctx.fillStyle = 'white';
 
         const stats = [
-            `オブジェクト: ${this.game.finalStats.objects}`,
+            `落とした数: ${this.game.finalStats.objects}`,
             `時間: ${this.game.finalStats.time}`,
             `最大高度: ${this.game.finalStats.height}px`
         ];
@@ -227,8 +218,8 @@ export class UIManager {
         this.ctx.fillStyle = '#cccccc';
         this.ctx.strokeStyle = 'black';
         this.ctx.lineWidth = 2;
-        this.ctx.strokeText('「ゲームをリセット」で再挑戦', centerX, centerY + 120);
-        this.ctx.fillText('「ゲームをリセット」で再挑戦', centerX, centerY + 120);
+        this.ctx.strokeText('「もういちど やろう」で再挑戦', centerX, centerY + 120);
+        this.ctx.fillText('「もういちど やろう」で再挑戦', centerX, centerY + 120);
 
         this.ctx.restore();
     }
