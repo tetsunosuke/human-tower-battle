@@ -227,7 +227,7 @@ export class CameraManager {
     extractPersonContour(segmentation, minX, minY, width, height) {
         const { data } = segmentation;
         const videoWidth = this.cameraVideo.videoWidth;
-        const scale = 60 / height;
+        const scale = 180 / height;
         const step = Math.max(1, Math.floor(Math.min(width, height) / 20));
         const vertices = [];
 
